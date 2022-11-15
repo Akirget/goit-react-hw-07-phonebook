@@ -1,0 +1,13 @@
+.allContacts {
+  margin-bottom: 10px;
+}
+
+.titleContacts {
+  margin-top: 20px;
+}
+
+h1,
+h2,
+label {
+  color: white;
+}

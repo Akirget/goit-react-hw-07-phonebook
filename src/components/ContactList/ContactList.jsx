@@ -1,25 +1,45 @@
-import { useSelector, useDispatch } from 'react-redux';
-import { deleteContact } from '../../redux/contacts/contacts-actions';
-import { getVisibleContacts } from '../../redux/contacts/contacts-selectors';
-import ContactListElem from '../ContactListElem/ContactListElem';
 import s from './ContactList.module.css';
+import ContactItem from '../ContactItem/ContactItem';
+import { useSelector } from 'react-redux';
+import { useGetContactsApiQuery } from 'redux/contactsApi';
 
 const ContactList = () => {
-  const contacts = useSelector(getVisibleContacts);
-  const dispatch = useDispatch();
+  const { data, isLoading } = useGetContactsApiQuery();
+  const filter = useSelector(state => state.filter.value);
+
+  const filteredContacts = () => {
+    const normalizeFilter = filter.toLowerCase();
+    return (
+      data &&
+      data.filter(contact =>
+        contact.name.toLowerCase().includes(normalizeFilter)
+      )
+    );
+  };
+
+  const filterEl = filteredContacts();
 
   return (
-    <ul className={s.list}>
-      {contacts.map(({ name, id, number }) => (
-        <li key={id} className={s.item}>
-          <ContactListElem
-            name={name}
-            number={number}
-            onDelete={() => dispatch(deleteContact(id))}
-          />
-        </li>
-      ))}
-    </ul>
+    <>
+      {isLoading && <p>Loading...</p>}
+      {
+        <ul className={s.list}>
+          {!isLoading && data && filterEl.length > 0 ? (
+            filterEl.map(({ id, name, phone }) => (
+              <ContactItem
+                key={id}
+                data={filterEl}
+                id={id}
+                name={name}
+                phone={phone}
+              />
+            ))
+          ) : (
+            <p className={s.text}>No contacts</p>
+          )}
+        </ul>
+      }
+    </>
   );
 };
 

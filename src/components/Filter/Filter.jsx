@@ -1,27 +1,26 @@
-import { nanoid } from 'nanoid';
 import { useSelector, useDispatch } from 'react-redux';
-import { getFilter } from '../../redux/contacts/contacts-selectors';
-import { changeFilter } from '../../redux/contacts/contacts-actions';
+import { filterContact } from 'redux/filterSlice';
+
 import s from './Filter.module.css';
 
 const Filter = () => {
-  const filterId = nanoid();
-  const value = useSelector(getFilter);
   const dispatch = useDispatch();
+  const filter = useSelector(state => state.filter.value);
 
+  const filterChange = e => {
+    dispatch(filterContact(e.currentTarget.value));
+  };
   return (
     <div className={s.filter}>
-      <label htmlFor={filterId} className={s.labelFilter}>
+      <label className={s.labelFilter}>
         Filter
+        <input
+          type="name"
+          value={filter}
+          onChange={filterChange}
+          className={s.filterInput}
+        />
       </label>
-      <input
-        id={filterId}
-        type="text"
-        name="filter"
-        className={s.filterInput}
-        value={value}
-        onChange={e => dispatch(changeFilter(e.target.value))}
-      />
     </div>
   );
 };

@@ -1,79 +1,75 @@
-import { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { nanoid } from 'nanoid';
-import { addContact } from '../../redux/contacts/contacts-actions';
-import { getContacts } from '../../redux/contacts/contacts-selectors';
-
+import React, { useState } from 'react';
 import s from './ContactForm.module.css';
+import {
+  useAddContactMutation,
+  useGetContactsApiQuery,
+} from 'redux/contactsApi';
+import Notiflix from 'notiflix';
 
-const ContactForm = () => {
+export default function ContactForm() {
   const [name, setName] = useState('');
-  const [number, setNumber] = useState('');
-  const dispatch = useDispatch();
-  const contacts = useSelector(getContacts);
-
-  const nameId = nanoid();
-  const numberId = nanoid();
+  const [phone, setPhone] = useState('');
+  const [addContact] = useAddContactMutation();
+  const { data } = useGetContactsApiQuery();
 
   const handleChange = e => {
-    const { value, name } = e.target;
-
-    if (name === 'name') {
-      setName(value);
-    }
-
-    if (name === 'number') {
-      setNumber(value);
+    const prop = e.currentTarget.name;
+    switch (prop) {
+      case 'name':
+        setName(e.currentTarget.value);
+        break;
+      case 'phone':
+        setPhone(e.currentTarget.value);
+        break;
+      default:
+        throw new Error('Error');
     }
   };
 
-  const handleSubmit = e => {
+  const handleAddContact = async e => {
     e.preventDefault();
-
-    if (contacts.find(contact => contact.name === name)) {
-      alert(`${name} is already in contacts`);
-      resetForm();
-      return;
+    if (
+      data.find(contact => contact.name.toLowerCase() === name.toLowerCase())
+    ) {
+      setName('');
+      setPhone('');
+      return Notiflix.Notify.warning(
+        `${name} - таке ім'я вже є, введіть будь ласка інше`,
+      );
     }
-
-    dispatch(addContact({ name, number }));
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setName('');
-    setNumber('');
+    if (name && phone) {
+      await addContact({ name: name, phone: phone }).unwrap();
+      setName('');
+      setPhone('');
+    }
   };
 
   return (
-    <form className={s.form} onSubmit={handleSubmit}>
-      <label htmlFor={nameId}>
+    <form className={s.form} onSubmit={handleAddContact}>
+      <label>
         Name
         <input
           className={s.inputName}
-          id={nameId}
+          value={name}
+          onChange={handleChange}
           type="text"
           name="name"
           pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
           title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
           required
-          value={name}
-          onChange={handleChange}
         />
       </label>
-
-      <label htmlFor={numberId}>
+      <label>
         Number
         <input
           className={s.inputNumber}
-          id={numberId}
+          value={phone}
+          onChange={handleChange}
           type="tel"
-          name="number"
+          name="phone"
           pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
           title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
           required
-          value={number}
-          onChange={handleChange}
         />
       </label>
 
@@ -82,6 +78,4 @@ const ContactForm = () => {
       </button>
     </form>
   );
-};
-
-export default ContactForm;
+}
